@@ -1,1 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber-Sec Terminal Dashboard</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #030703;
+            color: #00ff66;
+            font-family: 'Courier New', Courier, monospace;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background: rgba(0, 20, 5, 0.9);
+            border-bottom: 2px solid #00ff66;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.3);
+            z-index: 10;
+        }
+        header h1 {
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px #00ff66;
+        }
+        .status-badge {
+            background: #002208;
+            border: 1px solid #00ff66;
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 10px;
+            padding: 10px;
+            flex: 1;
+            height: calc(100vh - 50px);
+        }
+        .panel {
+            background: rgba(0, 10, 3, 0.85);
+            border: 1px solid #00aa44;
+            border-radius: 6px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 15px rgba(0, 255, 102, 0.05);
+        }
+        .panel::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, #00ff66, transparent);
+            animation: scanline 3s linear infinite;
+        }
+        @keyframes scanline {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        .panel-title {
+            font-size: 0.85rem;
+            font-weight: bold;
+            border-bottom: 1px dashed #005522;
+            padding-bottom: 5px;
+            margin-bottom: 8px;
+            color: #00ff88;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .panel-content {
+            flex: 1;
+            overflow-y: hidden;
+            font-size: 0.75rem;
+            line-height: 1.3;
+            color: #00cc55;
+        }
+        /* Matrix Rain Canvas Panel */
+        #matrix-panel {
+            grid-column: span 1;
+            grid-row: span 2;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        /* Log Text Animation */
+        .log-line {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 3px;
+        }
+        .highlight {
+            color: #ffffff;
+            text-shadow: 0 0 5px #00ff66;
+        }
+        .warning {
+            color: #ffcc00;
+        }
+        /* Fake Visual Chart Bars */
+        .bar-container {
+            margin-top: 8px;
+        }
+        .bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            margin-bottom: 2px;
+        }
+        .bar-track {
+            background: #002208;
+            height: 8px;
+            border: 1px solid #005522;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            background: #00ff66;
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease;
+            box-shadow: 0 0 6px #00ff66;
+        }
+    </style>
+</head>
+<body>
 
+    <header>
+        <h1>SYS_MONITOR // SECURE_CORE v4.8</h1>
+        <div class="status-badge" id="clock">STATUS: SECURE [LIVE]</div>
+    </header>
+
+    <div class="container">
+        <!-- پنل اول: بارش کدهای ماتریکس -->
+        <div class="panel" id="matrix-panel">
+            <div class="panel-title">Neural Stream Matrix</div>
+            <div class="panel-content" style="position:relative;">
+                <canvas id="matrixCanvas"></canvas>
+            </div>
+        </div>
+
+        <!-- پنل دوم: لاگ‌های امنیتی زنده -->
+        <div class="panel">
+            <div class="panel-title">System Activity Stream</div>
+            <div class="panel-content" id="logStream">
+                <div class="log-line">> Initializing secure kernel...</div>
+            </div>
+        </div>
+
+        <!-- پنل سوم: نمودارهای لایو سخت‌افزار -->
+        <div class="panel">
+            <div class="panel-title">Resource Telemetry</div>
+            <div class="panel-content">
+                <div class="bar-container">
+                    <div class="bar-label"><span>CPU CORE LOAD</span><span id="cpuVal">0%</span></div>
+                    <div class="bar-track"><div class="bar-fill" id="cpuBar"></div></div>
+                </div>
+                <div class="bar-container" style="margin-top: 15px;">
+                    <div class="bar-label"><span>MEMORY ALLOCATION</span><span id="memVal">0%</span></div>
+                    <div class="bar-track"><div class="bar-fill" id="memBar"></div></div>
+                </div>
+                <div class="bar-container" style="margin-top: 15px;">
+                    <div class="bar-label"><span>ENCRYPTION BANDWIDTH</span><span id="netVal">0%</span></div>
+                    <div class="bar-track"><div class="bar-fill" id="netBar"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- پنل چهارم: نقشه گره‌های شبکه -->
+        <div class="panel" style="grid-column: span 2;">
+            <div class="panel-title">Global Node Interception Matrix</div>
+            <div class="panel-content" id="nodeStream" style="font-family: monospace; color: #00dd55;">
+                [NODE_01]: ESTABLISHED CONNECTION -> 192.168.1.104 [SECURE]<br>
+                [NODE_02]: BYPASSING FIREWALL PROXY... OK<br>
+                [NODE_03]: ROUTING THROUGH TOKYO_RELAY [LATENCY: 14ms]<br>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ساعت زنده در هدر
+        setInterval(() => {
+            const d = new Date();
+            document.getElementById('clock').innerText = "TIME: " + d.toLocaleTimeString() + " [ACTIVE]";
+        }, 1000);
+
+        // افکت ماتریکس کدهای سبز رنگ
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const letters = '01ABCDEFHIJKLMNOPQRSTUVWXYZ@#$%&*<>\\/';
+        const fontSize = 14;
+        let columns = Math.floor(canvas.width / fontSize);
+        let drops = Array(columns).fill(1);
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(3, 7, 3, 0.15)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#00ff66';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = letters.charAt(Math.floor(Math.random() * letters.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 40);
+
+        // تولید لاگ‌های متحرک تصادفی برای جذابیت صفحه
+        const sampleLogs = [
+            "ACCESS GRANTED: User verified via biometrics.",
+            "DECRYPTING BLOCK #8841-A... SUCCESS.",
+            "WARNING: Trace detected on port 443, rerouting...",
+            "SYNCHRONIZING SECURE CLOUD DATABASE...",
+            "PACKET INJECTION SUCCESSFUL ON TARGET HOST.",
+            "BUILDING VIRTUAL SOCKET TUNNEL..."
+        ];
+
+        const logStream = document.getElementById('logStream');
+        setInterval(() => {
+            const p = document.createElement('div');
+            p.className = 'log-line';
+            p.innerText = "> " + sampleLogs[Math.floor(Math.random() * sampleLogs.length)];
+            logStream.appendChild(p);
+            if (logStream.children.length > 8) {
+                logStream.removeChild(logStream.children[0]);
+            }
+        }, 1200);
+
+        // آپدیت بار مترهای سیستم به صورت پویا
+        setInterval(() => {
+            const cpu = Math.floor(Math.random() * 40) + 45;
+            const mem = Math.floor(Math.random() * 20) + 60;
+            const net = Math.floor(Math.random() * 50) + 30;
+
+            document.getElementById('cpuVal').innerText = cpu + '%';
+            document.getElementById('cpuBar').style.width = cpu + '%';
+
+            document.getElementById('memVal').innerText = mem + '%';
+            document.getElementById('memBar').style.width = mem + '%';
+
+            document.getElementById('netVal').innerText = net + '%';
+            document.getElementById('netBar').style.width = net + '%';
+        }, 1500);
+    </script>
+</body>
+</html>
